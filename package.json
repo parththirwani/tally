@@ -1,5 +1,6 @@
 {
   "name": "tally",
+  "author": "Parth Thirwani",
   "bin": {
     "tally": "./dist/index.js"
   },
@@ -7,6 +8,15 @@
   "main": "dist/index.js",
   "bugs": {
     "url": "https://github.com/yourusername/tally/issues"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
+  ],"repository": {
+    "type": "git",
+    "url": "https://github.com/parththirwani/tally"
   },
   "scripts": {
     "dev": "tsc -w",
@@ -25,7 +35,6 @@
     "work-hours",
     "timer"
   ],
-  "author": "Parth Thirwani",
   "license": "MIT",
   "description": "A simple, no-nonsense CLI tool for tracking daily work hours",
   "dependencies": {
