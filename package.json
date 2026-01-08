@@ -3,23 +3,35 @@
   "bin": {
     "tally": "./dist/index.js"
   },
-  "version": "0.0.0",
-  "main": "index.js",
+  "version": "1.0.0",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsc -w",
-    "link-cli": "yarn --global unlink practice-cli && yarn --global link",
-    "build": "tsc"
+    "build": "tsc",
+    "link-cli": "npm unlink -g tally && npm link",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": [],
+  "keywords": [
+    "time-tracking",
+    "cli",
+    "productivity",
+    "work-hours",
+    "timer"
+  ],
   "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
+  "description": "A simple, no-nonsense CLI tool for tracking daily work hours",
   "dependencies": {
-    "commander": "^14.0.2"
+    "@types/sql.js": "^1.4.9",
+    "chalk": "^4.1.2",
+    "commander": "^14.0.2",
+    "sql.js": "^1.12.0"
   },
   "devDependencies": {
     "@types/node": "^25.0.3",
-    "node": "link:@./@types/node",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
