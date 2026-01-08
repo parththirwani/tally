@@ -1,5 +1,5 @@
 {
-  "name": "tally",
+  "name": "tally-time",
   "author": "Parth Thirwani",
   "bin": {
     "tally": "./dist/index.js"

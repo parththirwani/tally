@@ -19,7 +19,7 @@ Tally is a lightweight command-line time tracking application that helps you mon
 ## Installation
 
 ```bash
-npm install -g tally
+npm install -g tally-time
 ```
 
 ## Requirements
@@ -121,3 +121,7 @@ Tally stores all session data locally in a SQLite database:
 ## Contributing
 
 Contributions are welcome. Please feel free to submit issues or pull requests to improve Tally.
+
+## License
+
+MIT
