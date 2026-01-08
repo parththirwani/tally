@@ -5,6 +5,9 @@
   },
   "version": "1.0.0",
   "main": "dist/index.js",
+  "bugs": {
+    "url": "https://github.com/yourusername/tally/issues"
+  },
   "scripts": {
     "dev": "tsc -w",
     "build": "tsc",
@@ -22,7 +25,7 @@
     "work-hours",
     "timer"
   ],
-  "author": "",
+  "author": "Parth Thirwani",
   "license": "MIT",
   "description": "A simple, no-nonsense CLI tool for tracking daily work hours",
   "dependencies": {
