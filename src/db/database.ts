@@ -17,7 +17,7 @@ export interface Session {
 }
 
 class DatabaseManager {
-  private static instance: DatabaseManager;
+  private static instance: DatabaseManager | null = null;
   private db: SqlJsDatabase | null = null;
   private SQL: any = null;
   private dbPath: string | null = null;
@@ -109,8 +109,17 @@ class DatabaseManager {
       this.db = null;
     }
   }
+
+  // For testing: reset the singleton instance
+  static resetInstance(): void {
+    if (DatabaseManager.instance) {
+      DatabaseManager.instance.close();
+      DatabaseManager.instance = null;
+    }
+  }
 }
 
+// Utility functions
 export const rowToSession = (columns: string[], values: any[]): Session => {
   const session: any = {};
   columns.forEach((col, idx) => {
@@ -119,6 +128,7 @@ export const rowToSession = (columns: string[], values: any[]): Session => {
   return session as Session;
 };
 
+// Public API
 export const getDb = async (): Promise<SqlJsDatabase> => {
   return DatabaseManager.getInstance().getDatabase();
 };
@@ -129,4 +139,9 @@ export const saveDb = (): void => {
 
 export const closeDb = (): void => {
   DatabaseManager.getInstance().close();
+};
+
+// Test utility - resets the singleton for test isolation
+export const resetDbForTesting = (): void => {
+  DatabaseManager.resetInstance();
 };
