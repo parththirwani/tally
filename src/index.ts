@@ -13,7 +13,6 @@ program
   .description("A simple CLI tool for tracking daily work hours")
   .version("1.0.0");
 
-// Start command
 program
   .command("start")
   .description("Start a new work session")
@@ -27,7 +26,6 @@ program
     await startSession(project, options.tag, options.note);
   });
 
-// Stop command
 program
   .command("stop")
   .description("Stop the current work session")
@@ -36,7 +34,6 @@ program
     await stopSession(options.note);
   });
 
-// Pause command
 program
   .command("pause")
   .description("Pause the current work session")
@@ -44,7 +41,6 @@ program
     await pauseSession();
   });
 
-// Resume command
 program
   .command("resume")
   .description("Resume a paused work session")
@@ -53,7 +49,6 @@ program
     await resumeSession();
   });
 
-// Status command
 program
   .command("status")
   .description("Show current session status and today's total")
@@ -62,7 +57,6 @@ program
     await showStatus(options.live);
   });
 
-// Report command
 program
   .command("report")
   .description("Generate work reports")
@@ -73,7 +67,6 @@ program
     await generateReport(period || "today", options.detailed, options.export);
   });
 
-// Default action if no command provided
 program.action(() => {
   program.help();
 });

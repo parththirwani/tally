@@ -16,86 +16,117 @@ export interface Session {
   status: "running" | "paused" | "completed";
 }
 
-let dbInstance: SqlJsDatabase | null = null;
-let SQL: any = null;
-let dbPath: string | null = null;
+class DatabaseManager {
+  private static instance: DatabaseManager;
+  private db: SqlJsDatabase | null = null;
+  private SQL: any = null;
+  private dbPath: string | null = null;
 
-function getDataPath(): string {
-  const platform = process.platform;
-  let dataPath: string;
+  private constructor() {}
 
-  if (platform === "win32") {
-    dataPath = join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "tally");
-  } else if (platform === "darwin") {
-    dataPath = join(homedir(), "Library", "Application Support", "tally");
-  } else {
-    dataPath = join(process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"), "tally");
-  }
-
-  if (!existsSync(dataPath)) {
-    mkdirSync(dataPath, { recursive: true });
-  }
-
-  return join(dataPath, "tally.db");
-}
-
-export async function getDb(): Promise<SqlJsDatabase> {
-  if (!dbInstance) {
-    if (!SQL) {
-      SQL = await initSqlJs();
+  static getInstance(): DatabaseManager {
+    if (!DatabaseManager.instance) {
+      DatabaseManager.instance = new DatabaseManager();
     }
-    
-    dbPath = getDataPath();
-    
-    // Load existing database or create new one
-    let db: SqlJsDatabase;
-    if (existsSync(dbPath)) {
-      const buffer = readFileSync(dbPath);
-      db = new SQL.Database(buffer);
+    return DatabaseManager.instance;
+  }
+
+  private getDataPath(): string {
+    const platform = process.platform;
+    let dataPath: string;
+
+    if (platform === "win32") {
+      dataPath = join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "tally");
+    } else if (platform === "darwin") {
+      dataPath = join(homedir(), "Library", "Application Support", "tally");
     } else {
-      db = new SQL.Database();
+      dataPath = join(process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"), "tally");
     }
-    
-    dbInstance = db;
-    initializeDatabase(db);
+
+    if (!existsSync(dataPath)) {
+      mkdirSync(dataPath, { recursive: true });
+    }
+
+    return join(dataPath, "tally.db");
   }
-  return dbInstance;
+
+  private initializeSchema(db: SqlJsDatabase): void {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        start_time TEXT NOT NULL,
+        end_time TEXT,
+        pause_time TEXT,
+        total_seconds INTEGER DEFAULT 0,
+        paused_seconds INTEGER DEFAULT 0,
+        project TEXT,
+        tag TEXT,
+        note TEXT,
+        status TEXT NOT NULL CHECK(status IN ('running', 'paused', 'completed'))
+      )
+    `);
+
+    db.run("CREATE INDEX IF NOT EXISTS idx_start_time ON sessions(start_time)");
+    db.run("CREATE INDEX IF NOT EXISTS idx_status ON sessions(status)");
+    db.run("CREATE INDEX IF NOT EXISTS idx_project ON sessions(project)");
+
+    this.save();
+  }
+
+  async getDatabase(): Promise<SqlJsDatabase> {
+    if (!this.db) {
+      if (!this.SQL) {
+        this.SQL = await initSqlJs();
+      }
+
+      this.dbPath = this.getDataPath();
+
+      let database: SqlJsDatabase;
+      if (existsSync(this.dbPath)) {
+        const buffer = readFileSync(this.dbPath);
+        database = new this.SQL.Database(buffer);
+      } else {
+        database = new this.SQL.Database();
+      }
+
+      this.db = database;
+      this.initializeSchema(database);
+    }
+    return this.db;
+  }
+
+  save(): void {
+    if (this.db && this.dbPath) {
+      const data = this.db.export();
+      writeFileSync(this.dbPath, data);
+    }
+  }
+
+  close(): void {
+    if (this.db) {
+      this.save();
+      this.db.close();
+      this.db = null;
+    }
+  }
 }
 
-function initializeDatabase(db: SqlJsDatabase): void {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS sessions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      start_time TEXT NOT NULL,
-      end_time TEXT,
-      pause_time TEXT,
-      total_seconds INTEGER DEFAULT 0,
-      paused_seconds INTEGER DEFAULT 0,
-      project TEXT,
-      tag TEXT,
-      note TEXT,
-      status TEXT NOT NULL CHECK(status IN ('running', 'paused', 'completed'))
-    )
-  `);
-  
-  db.run("CREATE INDEX IF NOT EXISTS idx_start_time ON sessions(start_time)");
-  db.run("CREATE INDEX IF NOT EXISTS idx_status ON sessions(status)");
-  db.run("CREATE INDEX IF NOT EXISTS idx_project ON sessions(project)");
-  
-  saveDb();
-}
+export const rowToSession = (columns: string[], values: any[]): Session => {
+  const session: any = {};
+  columns.forEach((col, idx) => {
+    session[col] = values[idx];
+  });
+  return session as Session;
+};
 
-export function saveDb(): void {
-  if (dbInstance && dbPath) {
-    const data = dbInstance.export();
-    writeFileSync(dbPath, data);
-  }
-}
+export const getDb = async (): Promise<SqlJsDatabase> => {
+  return DatabaseManager.getInstance().getDatabase();
+};
 
-export function closeDb(): void {
-  if (dbInstance) {
-    saveDb();
-    dbInstance.close();
-    dbInstance = null;
-  }
-}
+export const saveDb = (): void => {
+  DatabaseManager.getInstance().save();
+};
+
+export const closeDb = (): void => {
+  DatabaseManager.getInstance().close();
+};
